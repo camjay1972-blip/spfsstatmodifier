@@ -3,19 +3,19 @@ local stats = LocalPlayer:FindFirstChild("leaderstats") or LocalPlayer:FindFirst
 if stats then
     local strength = stats:FindFirstChild("Strength")
     if strength then
-        strength.Value = "90qivg"
+        strength.Value = "90000000000000000000000000000000000000000000000000000000000000000000000000000000"
     end
     local psychic = stats:FindFirstChild("Psychic")
     if psychic then
-        psychic.Value = "90qivg"
+        psychic.Value = "900000000000000000000000000000000000000000000000000000000000000000000000000000000"
     end
     local endurance = stats:FindFirstChild("Endurance")
     if endurance then
-        endurance.Value = "90qivg"
+        endurance.Value = "90000000000000000000000000000000000000000000000000000000000000000000000000000000"
     end
     local speed = stats:FindFirstChild("Speed")
     if speed then
-        speed.Value = "90qivg"
+        speed.Value = "90000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
     end
     -- Agility stat modification intentionally omitted
 end
