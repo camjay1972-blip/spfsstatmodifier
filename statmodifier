@@ -1,0 +1,22 @@
+local LocalPlayer = game:GetService("Players").LocalPlayer
+local stats = LocalPlayer:FindFirstChild("leaderstats") or LocalPlayer:FindFirstChild("Stats")
+if stats then
+    local strength = stats:FindFirstChild("Strength")
+    if strength then
+        strength.Value = "90qivg"
+    end
+    local psychic = stats:FindFirstChild("Psychic")
+    if psychic then
+        psychic.Value = "90qivg"
+    end
+    local endurance = stats:FindFirstChild("Endurance")
+    if endurance then
+        endurance.Value = "90qivg"
+    end
+    local speed = stats:FindFirstChild("Speed")
+    if speed then
+        speed.Value = "90qivg"
+    end
+    -- Agility stat modification intentionally omitted
+end
+
