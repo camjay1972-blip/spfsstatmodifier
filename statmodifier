@@ -1,22 +1,46 @@
-local LocalPlayer = game:GetService("Players").LocalPlayer
-local stats = LocalPlayer:FindFirstChild("leaderstats") or LocalPlayer:FindFirstChild("Stats")
-if stats then
-    local strength = stats:FindFirstChild("Strength")
-    if strength then
-        strength.Value = "90000000000000000000000000000000000000000000000000000000000000000000000000000000"
-    end
-    local psychic = stats:FindFirstChild("Psychic")
-    if psychic then
-        psychic.Value = "900000000000000000000000000000000000000000000000000000000000000000000000000000000"
-    end
-    local endurance = stats:FindFirstChild("Endurance")
-    if endurance then
-        endurance.Value = "90000000000000000000000000000000000000000000000000000000000000000000000000000000"
-    end
-    local speed = stats:FindFirstChild("Speed")
-    if speed then
-        speed.Value = "90000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
-    end
-    -- Agility stat modification intentionally omitted
+-- statmodifier (set very large integer value for each stat)
+-- Waits for LocalPlayer, finds leaderstats/Stats, and assigns a very large numeric literal to each stat
+local Players = game:GetService("Players")
+
+-- Ensure LocalPlayer is available (works as a LocalScript; waits if needed)
+local LocalPlayer = Players.LocalPlayer
+if not LocalPlayer then
+    LocalPlayer = Players.PlayerAdded:Wait()
 end
 
+local stats = LocalPlayer:FindFirstChild("leaderstats") or LocalPlayer:FindFirstChild("Stats")
+if not stats then
+    -- Nothing to modify
+    return
+end
+
+-- The very large numeric literal requested
+local hugeValue = 900000000000000000000000000000000000000000
+
+local newValues = {
+    Strength  = hugeValue,
+    Psychic   = hugeValue,
+    Endurance = hugeValue,
+    Speed     = hugeValue,
+    -- Agility intentionally omitted
+}
+
+for statName, value in pairs(newValues) do
+    local statObj = stats:FindFirstChild(statName)
+    if statObj then
+        local success, err = pcall(function()
+            -- Prefer NumberValue / IntValue; otherwise attempt to set .Value and catch errors
+            if statObj:IsA("NumberValue") or statObj:IsA("IntValue") then
+                statObj.Value = value
+            else
+                statObj.Value = value
+            end
+        end)
+        if not success then
+            warn(("Failed to set %s: %s"):format(statName, tostring(err)))
+        end
+    end
+end
+
+-- Note: Roblox/Lua numbers are IEEE‑754 doubles; this literal will be represented in double precision
+-- and may be rounded. If you need arbitrary-precision integers, you'll need a different approach.
