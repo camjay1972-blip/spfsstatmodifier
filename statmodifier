@@ -1,46 +1,124 @@
--- statmodifier (set very large integer value for each stat)
--- Waits for LocalPlayer, finds leaderstats/Stats, and assigns a very large numeric literal to each stat
+-- StatModifier GUI (LocalScript)
+-- Place this LocalScript in StarterGui or StarterPlayerScripts so it runs for each LocalPlayer.
+
 local Players = game:GetService("Players")
-
--- Ensure LocalPlayer is available (works as a LocalScript; waits if needed)
-local LocalPlayer = Players.LocalPlayer
-if not LocalPlayer then
-    LocalPlayer = Players.PlayerAdded:Wait()
-end
-
-local stats = LocalPlayer:FindFirstChild("leaderstats") or LocalPlayer:FindFirstChild("Stats")
-if not stats then
-    -- Nothing to modify
-    return
-end
+local LocalPlayer = Players.LocalPlayer or Players.PlayerAdded:Wait()
 
 -- The very large numeric literal requested
 local hugeValue = 900000000000000000000000000000000000000000
 
-local newValues = {
-    Strength  = hugeValue,
-    Psychic   = hugeValue,
-    Endurance = hugeValue,
-    Speed     = hugeValue,
-    -- Agility intentionally omitted
-}
+-- Create GUI
+local playerGui = LocalPlayer:WaitForChild("PlayerGui")
 
-for statName, value in pairs(newValues) do
-    local statObj = stats:FindFirstChild(statName)
-    if statObj then
-        local success, err = pcall(function()
-            -- Prefer NumberValue / IntValue; otherwise attempt to set .Value and catch errors
-            if statObj:IsA("NumberValue") or statObj:IsA("IntValue") then
-                statObj.Value = value
-            else
-                statObj.Value = value
-            end
-        end)
-        if not success then
-            warn(("Failed to set %s: %s"):format(statName, tostring(err)))
-        end
-    end
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "StatModifierGui"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = playerGui
+
+local frame = Instance.new("Frame")
+frame.Name = "MainFrame"
+frame.Size = UDim2.new(0, 220, 0, 140)
+frame.Position = UDim2.new(0.5, -110, 0.5, -70)
+frame.AnchorPoint = Vector2.new(0.5, 0.5)
+frame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+frame.BorderSizePixel = 0
+frame.Parent = screenGui
+
+local title = Instance.new("TextLabel")
+title.Name = "Title"
+title.Size = UDim2.new(1, 0, 0, 28)
+title.Position = UDim2.new(0, 0, 0, 0)
+title.BackgroundTransparency = 1
+title.Text = "Stat Modifier"
+title.Font = Enum.Font.SourceSansBold
+title.TextSize = 18
+title.TextColor3 = Color3.fromRGB(255, 255, 255)
+title.Parent = frame
+
+local container = Instance.new("Frame")
+container.Name = "ButtonsContainer"
+container.Size = UDim2.new(1, -16, 1, -40)
+container.Position = UDim2.new(0, 8, 0, 32)
+container.BackgroundTransparency = 1
+container.Parent = frame
+
+local layout = Instance.new("UIListLayout")
+layout.Parent = container
+layout.FillDirection = Enum.FillDirection.Vertical
+layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+layout.SortOrder = Enum.SortOrder.LayoutOrder
+layout.Padding = UDim.new(0, 6)
+
+local function makeButton(text)
+    local btn = Instance.new("TextButton")
+    btn.Name = text .. "Button"
+    btn.Size = UDim2.new(1, 0, 0, 32)
+    btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Font = Enum.Font.SourceSans
+    btn.TextSize = 16
+    btn.Text = text
+    btn.Parent = container
+    return btn
 end
 
--- Note: Roblox/Lua numbers are IEEE‑754 doubles; this literal will be represented in double precision
--- and may be rounded. If you need arbitrary-precision integers, you'll need a different approach.
+-- Buttons for the three stats (matching the stat names in leaderstats/Stats)
+local statsList = {"Psychic", "Strength", "Endurance"}
+local buttons = {}
+
+for _, statName in ipairs(statsList) do
+    buttons[statName] = makeButton(statName)
+end
+
+-- Utility: get the player's stats folder (leaderstats or Stats)
+local function getStatsFolder(player)
+    return player:FindFirstChild("leaderstats") or player:FindFirstChild("Stats")
+end
+
+-- Wire up buttons: add hugeValue to the current stat value when pressed
+for statName, button in pairs(buttons) do
+    button.Activated:Connect(function()
+        local stats = getStatsFolder(LocalPlayer)
+        if not stats then
+            warn("StatModifier: no leaderstats/Stats found for player")
+            return
+        end
+
+        local statObj = stats:FindFirstChild(statName)
+        if not statObj then
+            warn(("StatModifier: stat %s not found"):format(statName))
+            return
+        end
+
+        local success, err = pcall(function()
+            -- Prefer NumberValue / IntValue; otherwise attempt to treat .Value as number
+            if statObj:IsA("NumberValue") or statObj:IsA("IntValue") then
+                statObj.Value = statObj.Value + hugeValue
+            else
+                -- Try to add to a numeric .Value field if present
+                local current = statObj.Value
+                if typeof(current) == "number" then
+                    statObj.Value = current + hugeValue
+                else
+                    error(("Unsupported stat object type for %s (ClassName=%s)"):format(statName, statObj.ClassName))
+                end
+            end
+        end)
+
+        if not success then
+            warn(("Failed to add to %s: %s"):format(statName, tostring(err)))
+        end
+    end)
+end
+
+-- Optional: small note about precision
+local info = Instance.new("TextLabel")
+info.Name = "PrecisionNote"
+info.Size = UDim2.new(1, 0, 0, 12)
+info.Position = UDim2.new(0, 0, 1, -12)
+info.BackgroundTransparency = 1
+info.Text = "Note: numbers are IEEE‑754 doubles; very large values may be rounded."
+info.Font = Enum.Font.SourceSans
+info.TextSize = 10
+info.TextColor3 = Color3.fromRGB(170, 170, 170)
+info.Parent = frame
